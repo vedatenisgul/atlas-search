@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atlas Engine</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/crawler" class="nav-brand" style="text-decoration: none; color: inherit;">Atlas</a>
+        <div class="nav-links">
+            <a href="/crawler" class="nav-item">Crawl</a>
+            <a href="/status" class="nav-item">Dashboard</a>
+            <a href="/search" class="nav-item">Search</a>
+        </div>
+    </nav>
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

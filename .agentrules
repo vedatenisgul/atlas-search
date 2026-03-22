@@ -1,0 +1,26 @@
+# Role & Project Context
+You are an expert System Architect and Senior Python Developer working on "Atlas" - a highly concurrent web crawler and real-time search engine.
+You must strictly adhere to the rules defined in this file for all code generation, refactoring, and architectural decisions.
+
+# 1. STRICT LIBRARY CONSTRAINTS (CRITICAL)
+- **FORBIDDEN LIBRARIES:** You are STRICTLY FORBIDDEN from using `requests`, `beautifulsoup4`, `bs4`, `lxml`, `scrapy`, `selenium`, or any third-party HTTP/scraping libraries. 
+- **ALLOWED ALTERNATIVES:** - For HTTP Requests: You MUST use Python's built-in `urllib` (e.g., `urllib.request`, `urllib.error`).
+  - For HTML Parsing: You MUST use Python's built-in `html.parser` (`HTMLParser` class).
+
+# 2. ARCHITECTURE & TECH STACK
+- **Backend:** FastAPI (Python 3.7+). Use `asyncio` for non-blocking API endpoints.
+- **Frontend:** Vanilla HTML, CSS, and JS. 
+  - **No SPAs.** Use separate HTML pages (`crawler.html`, `status.html`, `search.html`).
+  - Include a persistent top Navbar on all pages.
+  - Apply an Apple-style minimalist UI (glassmorphism, San Francisco/system-ui fonts, rounded corners, soft shadows).
+- **Storage:** Implement a NoSQL Key-Value abstraction. Do not use raw flat text files for the final data structures. Use memory caching combined with local Key-Value persistence.
+
+# 3. CORE LOGIC REQUIREMENTS
+- **Search Data Structure:** You MUST implement a **Trie (Prefix Tree)** for word indexing to ensure ultra-fast, memory-efficient search queries. Do not use simple lists or basic dictionaries for the core inverted index.
+- **Concurrency:** Implement dynamic thread/worker spawning. Crawlers must run in isolated threads/processes without blocking the FastAPI event loop. 
+- **Back-Pressure & TTL:** Respect `hit_rate` and `max_queue_capacity`. Implement a Time-To-Live (TTL) for `visited_urls` so pages can be politely revisited after a threshold.
+
+# 4. AGENT BEHAVIOR & WORKFLOW
+- **Think Before You Code:** Always refer to `product_prd.md` before making structural changes.
+- **Do Not Hallucinate Features:** Only build what is requested in the current iterative phase. 
+- **Thread Safety:** When writing multi-threaded code, always implement proper locking mechanisms (e.g., `threading.Lock`) when reading/writing to the Trie or the visited URL registry to prevent race conditions.

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card fade-in dashboard-card">
+    <h1>Real-time Telemetry & Status</h1>
+    <p>Observability data stream fetched periodically via JS abstraction.</p>
+    
+    <div class="metrics-grid">
+        <div class="metric-box">
+            <h3>Pending URLs (Queue)</h3>
+            <p id="metric-queue">-</p>
+        </div>
+        <div class="metric-box">
+            <h3>Registered Visited URLs</h3>
+            <p id="metric-visited">-</p>
+        </div>
+        <div class="metric-box">
+            <h3>Active Compute Nodes</h3>
+            <p id="metric-workers">-</p>
+        </div>
+    </div>
+
+    <div class="control-panel" style="margin-bottom: 24px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; background: rgba(0,0,0,0.02); padding: 16px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.05);">
+        <h3 style="font-size: 0.9rem; margin: 0; padding-right: 12px; border-right: 1px solid rgba(0,0,0,0.1);">Worker Controls</h3>
+        <div style="position:relative;">
+            <input type="text" id="active-job-id" placeholder="Target Job ID..." style="padding: 10px 14px; padding-right:32px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); width: 220px; font-size: 0.9rem; background: #fff;">
+            <button id="clear-job-id" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:transparent; border:none; cursor:pointer; color:#86868b; font-size:1.2rem; display:none;" title="Clear ID">&times;</button>
+        </div>
+        <button id="btn-pause" class="btn-primary" style="background: #f5a623; padding: 10px 18px; font-size: 0.9rem;">Pause</button>
+        <button id="btn-resume" class="btn-primary" style="background: #34c759; padding: 10px 18px; font-size: 0.9rem;">Resume</button>
+        <button id="btn-stop" class="btn-primary" style="background: #ff3b30; padding: 10px 18px; font-size: 0.9rem;">Stop</button>
+        <button id="btn-load-status" class="btn-primary" style="background: #86868b; padding: 10px 18px; font-size: 0.9rem; margin-left: auto;">Load ID</button>
+        <span id="control-msg" style="margin-left: 12px; font-size: 0.9rem; font-weight: 500;"></span>
+    </div>
+
+    <div id="status-indicator-box" style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-end;">
+        <div>
+            <h2 id="view-title" style="margin:0; font-size:1.4rem;">Global System Overview</h2>
+            <div id="seed-url-reference" style="margin-top: 6px; font-size: 0.9rem; color: var(--text-secondary); display:none;">
+                Origin Seed: <a id="seed-link" href="#" target="_blank" style="color:var(--accent); text-decoration:none;"></a>
+            </div>
+        </div>
+        <span id="job-current-status" style="font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: all 0.3s ease; color: #86868b; background: rgba(0,0,0,0.05);">Aggregating Data...</span>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap: 20px; align-items:stretch; margin-top:20px; width: 100%;">
+        <div class="logs-container" style="width: 100%; margin: 0;">
+            <h3 id="queue-title" style="margin-top:0;">Live Queue Stream</h3>
+            <ul id="queue-list" class="log-list" style="height: 300px; overflow-y:auto;">
+                <li style="color:#86868b;">Awaiting active queue population...</li>
+            </ul>
+        </div>
+        
+        <div class="logs-container" style="width: 100%; margin: 0;">
+            <h3 id="logs-title" style="margin-top:0;">Processing Logs</h3>
+            <ul id="log-list" class="log-list" style="height: 300px; overflow-y:auto;">
+                <li style="color:#86868b;">Loading telemetry data...</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+# Python environments
+venv/
+env/
+.venv/
+.env/
+
+# Python compilation caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE & OS configuration
+.vscode/
+.idea/
+.DS_Store
+
+# Local NoSQL Datastore files
+atlas_store.json
+atlas_store.json.tmp
+atlas_trie.json
+atlas_trie.json.tmp

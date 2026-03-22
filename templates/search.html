@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="search-container fade-in" style="margin-top: 5vh;">
+    <div class="search-hero" style="margin-bottom: 40px;">
+        <h1 class="logo-large">Atlas Search</h1>
+        <form id="search-form" style="margin-top:40px; text-align:center; position:relative; width:100%;">
+            <div style="display:flex; justify-content:center; align-items:center;">
+                <div style="position:relative; width: 80%; max-width: 600px;">
+                    <input type="text" id="query" placeholder="Search for a keyword..." class="search-input"
+                        style="width:100%; padding: 18px 50px 18px 30px; font-size: 1.2rem; border-radius: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.1);"
+                        required autocomplete="off">
+                    <button type="button" id="btn-clear-search"
+                        style="position:absolute; right:20px; top:50%; transform:translateY(-50%); background:none; border:none; color:#86868b; font-size:1.8rem; cursor:pointer; display:none; padding:0; line-height:1;">&times;</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div id="results-loader" class="hidden" style="margin-top:20px; color:#86868b; text-align:center;">Querying the Trie
+        structure natively...</div>
+    <p id="search-stats" class="hidden" style="text-align:center; color:#86868b; margin-top:20px; font-weight:500;"></p>
+    <div id="search-results" class="results-list"></div>
+    <div id="pagination-container" class="hidden"
+        style="display:flex; justify-content:space-between; align-items:center; margin-top:30px; background: rgba(0,0,0,0.02); padding: 12px 20px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.05);">
+        <button id="btn-prev" class="btn-primary"
+            style="background:var(--accent); padding: 8px 16px; font-size: 0.9rem;">Previous</button>
+        <span id="pagination-state-indicator" style="font-size: 0.9rem; font-weight: 500; color: #86868b;">Page 1 of
+            1</span>
+        <button id="btn-next" class="btn-primary"
+            style="background:var(--accent); padding: 8px 16px; font-size: 0.9rem;">Next</button>
+    </div>
+</div>
+{% endblock %}
