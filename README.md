@@ -38,7 +38,7 @@ A blazing-fast, highly concurrent web crawling platform and search engine built 
    ```bash
    git clone https://github.com/vedatenisgul/atlas-search.git
    cd atlas-search
-   ``
+   ```
 
 2. **Create a clean environment and install dependencies:**
    ```bash
