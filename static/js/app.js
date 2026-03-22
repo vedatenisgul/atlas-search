@@ -172,6 +172,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const action = e.target.getAttribute('data-action');
                 const id = e.target.getAttribute('data-id');
                 await fetch(`/api/crawler/${action}/${id}`, { method: 'POST' });
+                if (action === 'stop' || action === 'delete') {
+                    window.location.reload();
+                    return;
+                }
                 if (window.refreshMetricsNative) window.refreshMetricsNative();
                 if (window.updateHistoryList) window.updateHistoryList();
             });
@@ -397,7 +401,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnPause) {
         btnPause.addEventListener('click', () => controlAction('pause'));
         document.getElementById('btn-resume').addEventListener('click', () => controlAction('resume'));
-        document.getElementById('btn-stop').addEventListener('click', () => controlAction('stop'));
+        document.getElementById('btn-stop').addEventListener('click', async () => {
+            await controlAction('stop');
+            setTimeout(() => window.location.reload(), 300);
+        });
     }
 
     // Search Engine Handling via API bridge natively utilizing limits and offsets organically

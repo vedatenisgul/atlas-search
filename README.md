@@ -30,16 +30,15 @@ A blazing-fast, highly concurrent web crawling platform and search engine built 
 ### Prerequisites
 
 - Python 3.9 or higher
-- A Unix-based Operating System (Mac, Linux)
 - Web browser (Chrome, Firefox, Safari, Edge)
 
 ### Installation & Setup
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/atlas_search.git
-   cd atlas_search
-   ```
+   git clone https://github.com/vedatenisgul/atlas-search.git
+   cd atlas-search
+   ``
 
 2. **Create a clean environment and install dependencies:**
    ```bash

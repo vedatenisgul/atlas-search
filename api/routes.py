@@ -211,6 +211,8 @@ async def resume_crawler(job_id: str):
 async def stop_crawler(job_id: str):
     if job_id in workers:
         w = workers[job_id]
+        if not hasattr(w, "ended_at"):
+            w.ended_at = time.time()
         w.stop()
         w.job_state = "Stopped"
         # Persist in workers dictionary to render "Stopped" natively securely until explicit dismiss occurs!
