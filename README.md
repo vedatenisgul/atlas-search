@@ -1,8 +1,8 @@
-# 🕷️ Atlas Search & Web Crawler
+# Atlas Search
 
 A blazing-fast, highly concurrent web crawling platform and search engine built entirely from scratch with **FastAPI**, featuring real-time monitoring, intelligent zero-dependency indexing, and a beautiful responsive web interface.
 
-## 🌟 Features
+## Features
 
 - **Multi-threaded Web Crawler** natively spawning threads with configurable depth, queue capacities, and polite rate limiting.
 - **Real-time Telemetry Dashboard** with live metric streaming and job backpressure tracking.
@@ -14,6 +14,16 @@ A blazing-fast, highly concurrent web crawling platform and search engine built 
 - **Comprehensive Unit Tests** validating concurrent threading logic and recursive DOM limitations dynamically.
 - **SSL Certificate Handling** allowing crawling logic to gracefully bypass strict HTTPS blocks autonomously.
 - **AnyIO Threadpool Execution** maintaining the master FastAPI ASGI loop completely unblocked safely natively.
+
+## 📸 Screenshots
+
+| Initialization Portal | Real-time Search Engine |
+| :---: | :---: |
+| <img src="images/crawler.png" width="400" alt="Initialize Crawler Job"> | <img src="images/search.png" width="400" alt="Atlas Search Interface"> |
+
+| Live Telemetry Dashboard | Active Job Processing Streams |
+| :---: | :---: |
+| <img src="images/telemetry.png" width="400" alt="Live Telemetry Dashboard"> | <img src="images/logs.png" width="400" alt="Live Processing Logs"> |
 
 ## 🚀 Quick Start
 
