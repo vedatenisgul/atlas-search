@@ -15,8 +15,3 @@ __pycache__/
 .idea/
 .DS_Store
 
-# Local NoSQL Datastore files
-atlas_store.json
-atlas_store.json.tmp
-atlas_trie.json
-atlas_trie.json.tmp
