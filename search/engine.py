@@ -5,8 +5,9 @@ from search.ranking import rank_results
 class SearchEngine:
     @staticmethod
     def query(search_term, limit=10, offset=0):
-        # 1. Clean query input stripping casing and punctuation safely natively.
-        search_term = search_term.lower().strip()
+        # 1. Clean query input stripping casing and punctuation efficiently natively.
+        tr_map = { ord('I'): 'ı', ord('İ'): 'i', ord('Ü'): 'ü', ord('Ş'): 'ş', ord('Ö'): 'ö', ord('Ç'): 'ç', ord('Ğ'): 'ğ' }
+        search_term = search_term.translate(tr_map).lower().strip()
         search_term = search_term.translate(str.maketrans('', '', string.punctuation))
         words = search_term.split()
         
@@ -31,10 +32,10 @@ class SearchEngine:
         total = len(ranked)
         paginated = ranked[offset : offset + limit]
         
-        # 5. Format to tuple sequence: (relevant_url, origin_url, depth, frequency)
+        # 5. Format to tuple sequence: (relevant_url, origin_url, depth, frequency, relevance_score)
         results = []
         for url, meta in paginated:
-            results.append((url, meta["origin_url"], meta["depth"], meta["term_frequency"]))
+            results.append((url, meta["origin_url"], meta["depth"], meta["term_frequency"], meta.get("relevance_score", 0)))
             
         return {"total": total, "items": results}
 

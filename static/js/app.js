@@ -1,11 +1,11 @@
 window.updateHistoryList = async () => {
     const hc = document.getElementById('history-container');
-    if(!hc) return;
+    if (!hc) return;
     try {
         const res = await fetch('/api/crawler/history');
         const data = await res.json();
         const history = data.history || [];
-        if(history.length === 0) {
+        if (history.length === 0) {
             hc.innerHTML = '<p style="color:var(--text-secondary);">No historical records found.</p>';
             return;
         }
@@ -17,7 +17,7 @@ window.updateHistoryList = async () => {
                     <strong style="color:var(--text-secondary); font-size:0.85rem;">${h.job_id}</strong>
                     <div style="margin-top:4px;">Seed: <a href="${h.seed_url}" target="_blank" style="color:var(--accent); text-decoration:none;">${h.seed_url}</a></div>
                     <div style="color:var(--text-secondary); font-size:0.85rem; margin-top:6px;">Depth: ${h.max_depth} | Queue Cap: ${h.queue_capacity} | Max Target: ${h.max_urls} | Visited: ${h.visited_count}</div>
-                    ${h.created_at ? `<div style="font-size:0.75rem; color:#86868b; margin-top:6px;">🕒 Started: ${new Date(h.created_at*1000).toLocaleString()} ${h.ended_at ? '| 🛑 Ended: ' + new Date(h.ended_at*1000).toLocaleString() : ''}</div>` : ''}
+                    ${h.created_at ? `<div style="font-size:0.75rem; color:#86868b; margin-top:6px;">🕒 Started: ${new Date(h.created_at * 1000).toLocaleString()} ${h.ended_at ? '| 🛑 Ended: ' + new Date(h.ended_at * 1000).toLocaleString() : ''}</div>` : ''}
                 </div>
                 <div style="padding:4px 8px; border-radius:4px; font-size:0.85rem; font-weight:600; background:rgba(0,0,0,0.03); color:var(--text-secondary);">
                     ${h.state}
@@ -26,22 +26,22 @@ window.updateHistoryList = async () => {
         });
         html += '</div>';
         hc.innerHTML = html;
-    } catch(err) {
+    } catch (err) {
         console.error(err);
     }
 }
 
 window.dismissJob = async (jobId) => {
-    if(!confirm("Are you sure you want to dismiss and close this job?")) return;
+    if (!confirm("Are you sure you want to dismiss and close this job?")) return;
     try {
         const res = await fetch(`/api/crawler/delete/${jobId}`, { method: 'DELETE' });
-        if(res.ok) {
-            if(window.refreshMetricsNative) window.refreshMetricsNative();
+        if (res.ok) {
+            if (window.refreshMetricsNative) window.refreshMetricsNative();
             window.updateHistoryList();
         } else {
             alert("Failed to dismiss job.");
         }
-    } catch(err) {
+    } catch (err) {
         console.error(err);
     }
 };
@@ -65,7 +65,7 @@ document.addEventListener('click', (e) => {
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    if(document.getElementById('history-container')) {
+    if (document.getElementById('history-container')) {
         window.updateHistoryList();
     }
 
@@ -76,10 +76,10 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const btn = document.getElementById('start-btn');
             const msgBox = document.getElementById('crawler-msg');
-            
+
             btn.disabled = true;
             btn.textContent = "Deploying...";
-            
+
             const payload = {
                 url: document.getElementById('url').value,
                 max_depth: parseInt(document.getElementById('max_depth').value),
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 queue_capacity: parseInt(document.getElementById('queue_capacity').value || 10000),
                 max_urls: parseInt(document.getElementById('max_urls').value || 1000)
             };
-            
+
             try {
                 const res = await fetch('/api/crawler/create', {
                     method: 'POST',
@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify(payload)
                 });
                 const data = await res.json();
-                
+
                 msgBox.classList.remove('hidden');
                 msgBox.textContent = `Job Deployed Successfully! Internal Reference: ${data.job_id}`;
             } catch (err) {
@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
             jobsContainer.innerHTML = '<p style="color:var(--text-secondary);">No running deployments.</p>';
             return;
         }
-        
+
         let html = '<div style="display:flex; flex-direction:column; gap:10px;">';
         jobs.forEach(job => {
             const isPaused = job.state === 'Paused';
@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let stateBg = 'rgba(245, 166, 35, 0.1)';
             if (isRunning || job.state === 'Completed' || job.state === 'Already Indexed') { stateColor = '#34c759'; stateBg = 'rgba(52, 199, 89, 0.1)'; }
             if (job.state === 'Error') { stateColor = '#ff3b30'; stateBg = 'rgba(255, 59, 48, 0.1)'; }
-            
+
             html += `
             <div style="background:#fff; border:1px solid rgba(0,0,0,0.05); padding: 16px; border-radius: 12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
                 <div style="max-width: 50%; overflow:hidden;">
@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         html += '</div>';
         jobsContainer.innerHTML = html;
-        
+
         document.querySelectorAll('.job-ctrl-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const action = e.target.getAttribute('data-action');
@@ -194,9 +194,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (targetIdFromUrl && jobIdInput) {
         jobIdInput.value = targetIdFromUrl;
     }
-    
+
     if (jobIdInput && clearJobIdBtn) {
-        if(jobIdInput.value.trim() !== '') clearJobIdBtn.style.display = 'block';
+        if (jobIdInput.value.trim() !== '') clearJobIdBtn.style.display = 'block';
         jobIdInput.addEventListener('input', () => {
             clearJobIdBtn.style.display = jobIdInput.value.trim() !== '' ? 'block' : 'none';
         });
@@ -222,35 +222,105 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const jobIdInputEl = document.getElementById('active-job-id');
                 const activeJobId = jobIdInputEl ? jobIdInputEl.value.trim() : null;
-                
+
                 let endpoint = '/api/metrics';
                 if (activeJobId && metricQueue) {
                     endpoint = `/api/crawler/status/${activeJobId}`;
                 }
-                
+
                 const res = await fetch(endpoint);
                 const data = await res.json();
-                
-                    if (metricQueue) {
-                        if (data.backpressure_status) {
-                            let bpColor = '#34c759', bpBg = 'rgba(52, 199, 89, 0.1)';
-                            if (data.backpressure_status === 'Back-pressure Active') { bpColor = '#f5a623'; bpBg = 'rgba(245, 166, 35, 0.1)'; }
-                            else if (data.backpressure_status.includes('Critical')) { bpColor = '#ff3b30'; bpBg = 'rgba(255, 59, 48, 0.1)'; }
-                            metricQueue.innerHTML = `${data.queue_size} <div style="margin-top:10px; display:flex; flex-direction:column; align-items:center; gap:6px;"><span style="padding:6px 14px; border-radius:14px; font-size:1rem; font-weight:600; color:${bpColor}; background:${bpBg};">${data.backpressure_status} (${data.queue_utilization}%)</span><span style="font-size:0.9rem; color:#86868b; font-weight:normal;">Throttling: ${data.throttling_status}</span></div>`;
-                        } else {
-                            metricQueue.textContent = data.queue_size;
+
+                if (metricQueue) {
+                    // Helper: format uptime
+                    const formatUptime = (totalSeconds) => {
+                        const h = Math.floor(totalSeconds / 3600);
+                        const m = Math.floor((totalSeconds % 3600) / 60);
+                        const s = Math.floor(totalSeconds % 60);
+                        return `${h > 0 ? h + 'h ' : ''}${m}m ${s}s`;
+                    };
+
+                    // Toggle job-specific cards visibility based on mode
+                    const jobOnlyCards = ['metric-backpressure', 'metric-speed', 'metric-uptime'];
+                    jobOnlyCards.forEach(id => {
+                        const card = document.getElementById(id);
+                        if (card) {
+                            const box = card.closest('.metric-box');
+                            if (box) box.style.display = activeJobId ? '' : 'none';
                         }
-                        
-                        document.getElementById('metric-visited').textContent = data.total_visited;
-                        document.getElementById('metric-workers').textContent = data.active_workers ?? (data.is_running ? '1' : '0');
-                    
+                    });
+
+                    // 1. Status card
+                    const statusEl = document.getElementById('metric-status');
+                    if (statusEl) {
+                        const state = data.state || (data.is_running ? 'Running' : (data.active_workers > 0 ? 'Active' : 'Idle'));
+                        statusEl.textContent = state;
+                        if (state === 'Running') { statusEl.style.color = '#34c759'; }
+                        else if (state === 'Completed') { statusEl.style.color = '#0071e3'; }
+                        else if (state === 'Error') { statusEl.style.color = '#ff3b30'; }
+                        else if (state === 'Stopped' || state === 'Paused') { statusEl.style.color = '#f5a623'; }
+                        else { statusEl.style.color = '#86868b'; }
+                    }
+
+                    // 2. Total Crawled
+                    document.getElementById('metric-visited').textContent = data.total_visited;
+
+                    // 3. Pending Queue
+                    metricQueue.textContent = data.queue_size;
+
+                    // 4. Back-pressure Load
+                    const bpEl = document.getElementById('metric-backpressure');
+                    if (bpEl) {
+                        if (data.queue_utilization !== undefined) {
+                            const u = data.queue_utilization;
+                            let bpColor = '#34c759';
+                            if (u >= 95) bpColor = '#ff3b30';
+                            else if (u >= 75) bpColor = '#f5a623';
+                            bpEl.innerHTML = `<span style="color:${bpColor}; font-weight:700;">${u}%</span>`;
+                        } else {
+                            bpEl.innerHTML = `<span style="color:#86868b;">N/A</span>`;
+                        }
+                    }
+
+                    // 5. Effective Speed
+                    const speedEl = document.getElementById('metric-speed');
+                    if (speedEl) {
+                        if (data.actual_hit_rate !== undefined) {
+                            speedEl.innerHTML = `${data.actual_hit_rate} <span style="font-size:0.85rem; color:#86868b;">req/s</span>` +
+                                (data.target_hit_rate ? `<div style="font-size:0.75rem; color:#86868b; margin-top:4px;">Target: ${data.target_hit_rate}</div>` : '');
+                        } else {
+                            speedEl.innerHTML = `<span style="color:#86868b;">N/A</span>`;
+                        }
+                    }
+
+                    // 6. Active Uptime (interpolated every 1s for smooth ticking)
+                    const uptimeEl = document.getElementById('metric-uptime');
+                    if (uptimeEl) {
+                        if (data.uptime_seconds !== undefined) {
+                            window._lastUptime = data.uptime_seconds;
+                            window._lastUptimeRunning = data.is_running;
+                            uptimeEl.textContent = formatUptime(data.uptime_seconds);
+                            if (!window._uptimeTicker) {
+                                window._uptimeTicker = setInterval(() => {
+                                    if (window._lastUptimeRunning && window._lastUptime !== undefined) {
+                                        window._lastUptime += 1;
+                                        const el = document.getElementById('metric-uptime');
+                                        if (el) el.textContent = formatUptime(window._lastUptime);
+                                    }
+                                }, 1000);
+                            }
+                        } else {
+                            uptimeEl.textContent = 'N/A';
+                        }
+                    }
+
                     const logList = document.getElementById('log-list');
                     const queueList = document.getElementById('queue-list');
                     const queueTitle = document.getElementById('queue-title');
-                    
+
                     if (logList) logList.innerHTML = '';
                     if (queueList) queueList.innerHTML = '';
-                    
+
                     // Display top live URLs if targeted recursively
                     if (activeJobId && data.top_live_urls) {
                         if (viewTitle) viewTitle.textContent = "Targeted Job Telemetry";
@@ -290,11 +360,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             });
                         }
                     }
-                    
-                    if(data.logs.length === 0 && (!data.jobs || data.jobs.length === 0)) {
+
+                    if (data.logs.length === 0 && (!data.jobs || data.jobs.length === 0)) {
                         logList.innerHTML += '<li>System idling... listening for worker telemetry loops.</li>';
                     }
-                    
+
                     const recentLogs = [...data.logs].reverse();
                     recentLogs.forEach(log => {
                         const li = document.createElement('li');
@@ -307,22 +377,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     const statusBox = document.getElementById('job-current-status');
                     const seedRefBox = document.getElementById('seed-url-reference');
                     const seedLink = document.getElementById('seed-link');
-                    
+
                     if (statusBox) {
                         if (activeJobId) {
                             const isJobEndpoint = !!data.job_id;
                             let jobState = 'Unknown';
                             if (isJobEndpoint) {
-                                 jobState = data.state || (data.is_running ? 'Running' : 'Paused');
-                                 if (data.seed_url && seedRefBox) {
-                                     seedRefBox.style.display = 'block';
-                                     seedLink.href = data.seed_url;
-                                     seedLink.textContent = data.seed_url;
-                                 }
+                                jobState = data.state || (data.is_running ? 'Running' : 'Paused');
+                                if (data.seed_url && seedRefBox) {
+                                    seedRefBox.style.display = 'block';
+                                    seedLink.href = data.seed_url;
+                                    seedLink.textContent = data.seed_url;
+                                }
                             }
-                            
+
                             statusBox.textContent = `Target: ${activeJobId} (${jobState})`;
-                            
+
                             if (jobState === 'Completed') {
                                 statusBox.style.background = '#34c759';
                                 statusBox.style.color = '#fff';
@@ -336,7 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 statusBox.style.background = 'var(--accent)';
                                 statusBox.style.color = '#fff';
                             }
-                            
+
                             if (['Completed', 'Error', 'Stopped'].includes(jobState)) {
                                 if (window.telemetryInterval) {
                                     clearInterval(window.telemetryInterval);
@@ -345,9 +415,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const btnPause = document.getElementById('btn-pause');
                                 const btnResume = document.getElementById('btn-resume');
                                 const btnStop = document.getElementById('btn-stop');
-                                if(btnPause) btnPause.disabled = true;
-                                if(btnResume) btnResume.disabled = true;
-                                if(btnStop) btnStop.disabled = true;
+                                if (btnPause) btnPause.disabled = true;
+                                if (btnResume) btnResume.disabled = true;
+                                if (btnStop) btnStop.disabled = true;
                             }
                         } else {
                             statusBox.textContent = `Global Multi-Worker Mode`;
@@ -357,7 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
                 }
-                
+
                 if (jobsContainer) {
                     updateJobsList(data.jobs || []);
                 }
@@ -367,7 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         window.refreshMetricsNative = fetchMetrics;
         fetchMetrics();
-        window.telemetryInterval = setInterval(fetchMetrics, 2000); 
+        window.telemetryInterval = setInterval(fetchMetrics, 2000);
     }
 
     // Job Controls on Status Page
@@ -390,7 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 msg.textContent = `Error: ${data.detail || 'Action failed'}`;
                 msg.style.color = "#ff3b30";
             }
-        } catch(err) {
+        } catch (err) {
             msg.textContent = `Error: ${err.message}`;
             msg.style.color = "#ff3b30";
         }
@@ -413,47 +483,50 @@ document.addEventListener('DOMContentLoaded', () => {
         let currentOffset = 0;
         let activeQuery = "";
         const limitPerPage = 10;
-        
+
         const fetchResults = async () => {
             const query = document.getElementById('query').value;
             const loader = document.getElementById('results-loader');
             const resultsBox = document.getElementById('search-results');
             const statsText = document.getElementById('search-stats');
-            
+
             const btnPrevBlock = document.getElementById('btn-prev');
             const btnNextBlock = document.getElementById('btn-next');
             const pgIndicator = document.getElementById('pagination-state-indicator');
             const pgContainer = document.getElementById('pagination-container');
-            
+
             activeQuery = query;
             loader.classList.remove('hidden');
             statsText.classList.add('hidden');
             resultsBox.innerHTML = '';
             if (pgContainer) pgContainer.classList.add('hidden');
-            
+
             try {
                 const res = await fetch(`/api/search?query=${encodeURIComponent(query)}&limit=${limitPerPage}&offset=${currentOffset}`);
                 const data = await res.json();
-                
+
                 loader.classList.add('hidden');
-                
+
                 if (data.results.length === 0 && currentOffset === 0) {
                     resultsBox.innerHTML = '<p style="text-align:center; color:#86868b; margin-top:20px;">No match indices found in localized Trie.</p>';
                     return;
                 }
-                
+
                 const total = data.total_results || 0;
                 statsText.textContent = `Found ${total} result(s) for '${query}'`;
                 statsText.classList.remove('hidden');
-                
+
                 data.results.forEach(item => {
                     const div = document.createElement('div');
                     div.className = 'result-item fade-in';
-                    
+
                     div.innerHTML = `
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 4px;">
                             <a href="${item.url}" target="_blank" style="font-size:1.25rem; font-weight:600; color:#000; text-decoration:none; display:inline-block; word-wrap: break-word; overflow-wrap: anywhere;">${item.title || item.url}</a>
-                            <span style="font-size:0.85rem; padding:4px 8px; background:rgba(0,113,227,0.1); color:var(--accent); border-radius:12px; font-weight:600; white-space:nowrap; flex-shrink:0; margin-left:12px;">Matches: ${item.frequency}</span>
+                            <div style="display:flex; align-items:center; flex-shrink:0;">
+                                <span style="font-size:0.85rem; padding:4px 8px; background:rgba(255,149,0,0.1); color:#ff9500; border-radius:12px; font-weight:600; white-space:nowrap; margin-left:12px;">Relevance Score: ${item.relevance_score ? item.relevance_score.toFixed(0) : 'N/A'}</span>
+                                <span style="font-size:0.85rem; padding:4px 8px; background:rgba(0,113,227,0.1); color:var(--accent); border-radius:12px; font-weight:600; white-space:nowrap; margin-left:8px;">Matches: ${item.frequency}</span>
+                            </div>
                         </div>
                         <div style="font-size:0.85rem; color:#006621; margin-bottom: 6px; word-wrap: break-word; overflow-wrap: anywhere;">${item.url}</div>
                         <div style="font-size:0.95rem; color:#4d5156; line-height: 1.5; word-wrap: break-word; overflow-wrap: anywhere;">${item.snippet ? item.snippet + '...' : 'No text snippet available.'}</div>
@@ -464,27 +537,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     `;
                     resultsBox.appendChild(div);
                 });
-                
+
                 if (pgContainer && total > limitPerPage) {
                     pgContainer.classList.remove('hidden');
-                    
+
                     let currentPage = Math.floor(currentOffset / limitPerPage) + 1;
                     let totalPages = Math.ceil(total / limitPerPage);
-                    
+
                     let startCount = currentOffset + 1;
                     let endCount = Math.min(currentOffset + limitPerPage, total);
                     pgIndicator.textContent = `Showing ${startCount}-${endCount} of ${total} (Page ${currentPage} of ${totalPages})`;
-                    
+
                     btnPrevBlock.disabled = currentOffset <= 0;
                     btnNextBlock.disabled = currentOffset + limitPerPage >= total;
-                    
-                    if(btnPrevBlock.disabled) btnPrevBlock.style.opacity = '0.5';
+
+                    if (btnPrevBlock.disabled) btnPrevBlock.style.opacity = '0.5';
                     else btnPrevBlock.style.opacity = '1';
-                    
-                    if(btnNextBlock.disabled) btnNextBlock.style.opacity = '0.5';
+
+                    if (btnNextBlock.disabled) btnNextBlock.style.opacity = '0.5';
                     else btnNextBlock.style.opacity = '1';
                 }
-                
+
             } catch (err) {
                 loader.classList.add('hidden');
                 resultsBox.innerHTML = `<p style="text-align:center; color:red;">Engine traversal error encountered</p>`;
@@ -493,15 +566,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const queryInput = document.getElementById('query');
         const btnClearSearch = document.getElementById('btn-clear-search');
-        
+
         queryInput.addEventListener('input', () => {
-            if(queryInput.value.length > 0) {
+            if (queryInput.value.length > 0) {
                 btnClearSearch.style.display = 'block';
             } else {
                 btnClearSearch.style.display = 'none';
             }
         });
-        
+
         if (btnClearSearch) {
             btnClearSearch.addEventListener('click', () => {
                 queryInput.value = '';
@@ -511,7 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (statsText) statsText.classList.add('hidden');
                 const pgContainer = document.getElementById('pagination-container');
                 if (pgContainer) pgContainer.classList.add('hidden');
-                
+
                 // Reset URL params natively
                 const url = new URL(window.location);
                 url.searchParams.delete('query');
@@ -522,15 +595,15 @@ document.addEventListener('DOMContentLoaded', () => {
         searchForm.addEventListener('submit', (e) => {
             e.preventDefault();
             currentOffset = 0;
-            
+
             // Set URL param natively for sharing
             const url = new URL(window.location);
             url.searchParams.set('query', queryInput.value);
             window.history.replaceState({}, '', url);
-            
+
             fetchResults();
         });
-        
+
         // Auto-run search if query in URL natively
         const queryFromUrl = new URLSearchParams(window.location.search).get('query');
         if (queryFromUrl) {
@@ -538,7 +611,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btnClearSearch.style.display = 'block';
             fetchResults();
         }
-        
+
         // Ensure Enter key triggers search properly without submit button.
         queryInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
@@ -550,10 +623,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 fetchResults();
             }
         });
-        
+
         const btnPrevBlock = document.getElementById('btn-prev');
         const btnNextBlock = document.getElementById('btn-next');
-        
+
         if (btnPrevBlock) {
             btnPrevBlock.addEventListener('click', () => {
                 if (currentOffset >= limitPerPage) {

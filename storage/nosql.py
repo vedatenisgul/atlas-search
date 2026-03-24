@@ -70,12 +70,20 @@ class NoSQLStore:
         self.running = False
         self._save()
 
+    def save(self):
+        """Public save method for external callers."""
+        self._save()
+
     def clear_all(self):
         with self.lock:
             self.data = {
+                "seen_urls": {},
                 "visited_urls": {},
                 "crawler_queue": [],
-                "crawler_logs": []
+                "crawler_logs": [],
+                "job_history": [],
+                "jobs": {},
+                "metadata": {}
             }
         self._save()
 

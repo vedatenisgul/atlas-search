@@ -5,13 +5,17 @@ A blazing-fast, highly concurrent web crawling platform and search engine built 
 ## Features
 
 - **Multi-threaded Web Crawler** natively spawning threads with configurable depth, queue capacities, and polite rate limiting.
-- **Real-time Telemetry Dashboard** with live metric streaming and job backpressure tracking.
+- **Real-time Telemetry Dashboard** with 6 live metric cards — Status, Total Crawled, Pending Queue, Back-pressure Load, Effective Speed, and Active Uptime.
 - **Advanced Search Engine** utilizing an ultra-fast **Inverted Index Prefix Trie** for instant O(1) query completions.
+- **Turkish Locale Support** with full case-folding for İ/ı/Ü/Ş/Ö/Ç/Ğ characters ensuring locale-aware search matching.
+- **Persistent Search Across Reboots** via Legacy ETL flat-file export (`a.data` – `z.data`) and automatic Trie hydration on startup.
+- **Auto-Orphan Cleanup** moves unfinished jobs to history on server restart — no zombie entries in the dashboard.
+- **URL Deduplication Guard** prevents frequency inflation when the same URL is crawled across multiple jobs.
 - **Responsive Web Interface** featuring elegant Glassmorphism aesthetics for crawler management and history exploration.
 - **NoSQL Thread-Safe Storage** built with Python `RLock()` replacing heavy Postgres/Elasticsearch overheads.
 - **Pause/Resume/Stop** control actions for live background worker mutations.
 - **Native HTML Parsing** cleanly extracting semantic contexts and titles strictly evaluating standard `html.parser` logic.
-- **Comprehensive Unit Tests** validating concurrent threading logic and recursive DOM limitations dynamically.
+- **Comprehensive Unit Tests** — 28 tests spanning concurrency, ranking, Turkish locale, ETL export/import, and storage integrity.
 - **SSL Certificate Handling** allowing crawling logic to gracefully bypass strict HTTPS blocks autonomously.
 - **AnyIO Threadpool Execution** maintaining the master FastAPI ASGI loop completely unblocked safely natively.
 
@@ -91,20 +95,22 @@ A blazing-fast, highly concurrent web crawling platform and search engine built 
 ```
 atlas_search/
 ├── api/                        # 🚀 Backend Gateways
-│   ├── main.py                 #    FastAPI application & orchestrator
+│   ├── main.py                 #    FastAPI app, lifespan (Trie hydration + orphan cleanup)
 │   └── routes.py               #    API controllers & async threadpools
 ├── core/                       # 🛠️ Data Logistics
 │   ├── parser.py               #    Native HTML sanitization & DOM trimming
 │   └── security.py             #    Security protocols
 ├── crawler/                    # 🕷️ Background Workers
 │   ├── queue.py                #    Priority URL assignment logic
-│   └── worker.py               #    Multi-threaded autonomous execution
+│   └── worker.py               #    Multi-threaded execution + ETL export hook
 ├── search/                     # 🔍 Index Queries
-│   ├── engine.py               #    Search execution & string filters
-│   └── ranking.py              #    Term-frequency algorithmic evaluation
-├── storage/                    # 💾 Memory Caching
+│   ├── engine.py               #    Search execution + Turkish locale case-folding
+│   └── ranking.py              #    Relevancy: (freq×10) + 1000 − (depth×5)
+├── storage/                    # 💾 Memory Caching & Persistence
 │   ├── nosql.py                #    O(1) JSON Key-Value datastore abstraction
-│   └── trie.py                 #    Inverted Index Prefix Tree graph
+│   ├── trie.py                 #    Inverted Index Prefix Tree graph
+│   └── exporter.py             #    Legacy ETL flat-file export/import (a-z.data)
+├── data/storage/               # 📂 Exported alphabetical .data files
 ├── static/                     # 🎨 Frontend Web Resources
 │   ├── js/app.js               #    Interactive async DOM logic
 │   └── css/style.css           #    Minimalist Glassmorphism styling
@@ -112,8 +118,15 @@ atlas_search/
 │   ├── base.html               #    Global navbar layout wrapper
 │   ├── crawler.html            #    Deployment configurations
 │   ├── search.html             #    Query interfaces
-│   └── status.html             #    Telemetry monitoring dashboards
-├── tests/                      # 🧪 Automated Test Suite
+│   └── status.html             #    6-card telemetry monitoring dashboard
+├── tests/                      # 🧪 28 Automated Tests
+│   ├── test_api.py             #    API endpoint validation
+│   ├── test_concurrency.py     #    Multi-thread race condition tests
+│   ├── test_lifecycle.py       #    Job lifecycle & queue limits
+│   ├── test_parser.py          #    HTML parser & snippet extraction
+│   ├── test_ranking.py         #    Relevancy scoring formula
+│   ├── test_search.py          #    Turkish locale & deduplication
+│   └── test_storage.py         #    NoSQLStore, ETL export/import
 ├── requirements.txt            # 📦 Minimal dependencies (FastAPI, Uvicorn)
 ├── architecture.md             # 📖 Detailed system architectures
 └── README.md                   # 📖 This file
@@ -138,15 +151,21 @@ POST /api/crawler/stop/{job_id}
 POST /api/crawler/pause/{job_id}
 POST /api/crawler/resume/{job_id}
 
-# Global Wipe
-POST /api/crawler/reset
+# Global Wipe (clears DB + data/storage/*.data files)
+POST /api/system/reset
+
+# Export Trie to Legacy Flat Files
+POST /api/crawler/export
 ```
 
 ### Telemetry
 
 ```bash
-# Full System Dump
+# Full System Dump (queue, visited, active workers)
 GET /api/metrics
+
+# Job-Specific Telemetry (uptime, hit rate, backpressure)
+GET /api/crawler/status/{job_id}
 
 # Job History
 GET /api/crawler/history
@@ -159,14 +178,21 @@ GET /api/crawler/history
 GET /api/search?query=python&limit=10&offset=0
 ```
 
-## 🧪 Validating Architecture Testing
+## 🧪 Testing (28 Tests)
 
-Atlas uses native Python `unittest` libraries to aggressively validate logical integrity safely without external dependencies:
+Atlas uses native Python `unittest` to validate logical integrity without external dependencies:
 
 ```bash
-# Execute Test Discoveries
 source venv/bin/activate
 python3 -m unittest discover tests/
 ```
 
-Test coverage comprehensively spans strict `storage/trie.py` thread-racing, `CrawlerWorker` queue starvation boundaries, and absolute `.agentrules` architectural constraints tightly cleanly dynamically expertly.
+| Test File | Tests | Coverage |
+|-----------|-------|----------|
+| `test_api.py` | 3 | API endpoints, search metadata merging, job delete lifecycle |
+| `test_concurrency.py` | 2 | Multi-thread crawling, queue depletion race conditions |
+| `test_lifecycle.py` | 5 | Queue capacity limits, duplicate submission, pause/resume/stop, max_urls, network failures |
+| `test_parser.py` | 3 | Semantic exclusion, snippet clamping, malformed HTML & relative links |
+| `test_ranking.py` | 3 | Relevancy formula `(freq×10) + 1000 − (depth×5)`, sort order, edge cases |
+| `test_search.py` | 5 | Turkish İ/I case-folding, URL deduplication, relevance score propagation |
+| `test_storage.py` | 7 | `db.save()` persistence, `clear_all()` schema, ETL export format, import/restore |

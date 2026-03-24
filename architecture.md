@@ -1,4 +1,4 @@
-# Atlas Search Engine Architecture (v1.1)
+# Atlas Search Engine Architecture (v1.2)
 
 Atlas is a highly parallelized, pure native Python web crawler and real-time search engine. It is driven by a FastAPI orchestrator and explicitly built without heavy external frameworks (no Scrapy, no SQLAlchemy, no Elasticsearch, no Redis). It leverages Python's built-in concurrency modules and custom memory structures to establish a highly capable, zero-dependency environment suitable for enterprise-grade indexing natively.
 
@@ -30,6 +30,13 @@ A high-speed Trie graph structurally mapping deeply nested characters inherently
 - **Node Concept:** A lightweight character traversal map allocating `children` memory pointers terminating safely at an end node natively.
 - **Relevance Mapping:** Individual tree layers isolate the specific word strings natively pinning URLs and their specific count frequencies exactly to the node leaf.
 - **Concurrency:** Uses a global `RLock()` for inserts and queries ensuring absolute thread-safety from memory-fault corruptions during extreme `CrawlerWorker` ingestion overlap.
+- **URL Deduplication Guard:** Before indexing a page, `index_text()` checks if that URL already exists in the Trie for the first word. If it does, re-indexing is skipped entirely — preventing frequency inflation across multiple crawl runs of the same URL.
+
+### `storage/exporter.py` (Legacy ETL Flat-File Persistence)
+Adds academic-grade persistence and cross-reboot search capability.
+- **Export (`export_all_to_legacy_format`):** Traverses the entire Trie, partitions words alphabetically, and writes space-separated lines (`word url origin_url depth frequency`) into `data/storage/a.data` through `z.data` (plus `other.data`).
+- **Import (`import_legacy_data_to_trie`):** On server startup, reads all `.data` files and reconstructs the Trie graph in memory — enabling search to work immediately after reboot.
+- **Auto-Trigger:** The exporter fires automatically in the worker's `finally` block when a crawl job completes or is stopped.
 
 ---
 
@@ -43,19 +50,28 @@ To prevent internal event loop timeouts, the architecture explicitly separates s
 
 ---
 
-## 4. Search Ranking Algorithms
+## 4. Search Ranking & Turkish Locale
 
 The search module (`search/engine.py` and `search/ranking.py`) executes sub-millisecond document retrievals by intersecting independent paths within the Trie namespace:
 
-1. **Query Tokenization**: User strings are natively tokenized and sanitized, scrubbing standard punctuation.
-2. **Frequency Scoring**: Results are intrinsically ranked according to highest keyword frequencies natively mapped at the Trie leaf. URL sets are intersected natively so only paths maintaining all user query conditions explicitly survive the filter safely.
-3. **Contextual Hydration**: Raw ranked URLs are piped natively into `nosql.py`'s metadata dictionary smoothly extracting the site title, snippet, and origin job ID cleanly formatting the presentation natively for the frontend UI.
+1. **Turkish Case-Folding**: Before tokenization, queries pass through a custom `str.translate()` map that correctly handles Turkish-specific characters: `I→ı`, `İ→i`, `Ü→ü`, `Ş→ş`, `Ö→ö`, `Ç→ç`, `Ğ→ğ`. The same map is applied during crawl-time indexing for consistency.
+2. **Query Tokenization**: User strings are tokenized and sanitized, scrubbing standard punctuation.
+3. **Relevancy Scoring**: Results are ranked using the formula `(term_frequency × 10) + 1000 − (depth × 5)`. Higher frequency and shallower depth produce higher scores.
+4. **Contextual Hydration**: Raw ranked URLs are piped into `nosql.py`'s metadata dictionary extracting titles, snippets, and origin job IDs for frontend presentation.
 
 ---
 
-## 5. Frontend Telemetry
+## 5. Frontend Telemetry & Startup Lifecycle
 
-The application leverages standard Vanilla JS, HTML, and CSS arrays exclusively mimicking Apple's Human Interaction Guidelines securely (no Webpack, no React, no NPM).
+The application leverages standard Vanilla JS, HTML, and CSS exclusively mimicking Apple's Human Interaction Guidelines (no Webpack, no React, no NPM).
 
-- **Dynamic Backpressure Badges**: Translates instantaneous queue load calculations (e.g., `< 75%` or `>= 100%`) natively into interactive color-coded diagnostic ribbons reflecting systemic health visually. 
-- **Live Event Loops**: Uses JS `setInterval` blocks correctly invoking isolated `/api/metrics` checks securely mirroring thread status optimally smoothly.
+- **6-Card Adaptive Dashboard**: When viewing a specific job, the status page displays 6 real-time cards — Status, Total Crawled, Pending Queue, Back-pressure Load, Effective Speed, and Active Uptime. In global mode, the job-specific cards (Back-pressure, Speed, Uptime) are automatically hidden.
+- **Smooth Uptime Ticker**: Active Uptime interpolates client-side every 1 second between the 2-second API polling cycles. When a job finishes, uptime freezes at `ended_at - created_at`.
+- **Effective Speed Snapshot**: `actual_hit_rate` is calculated as `total_visited / uptime`. After job completion, uptime stops growing so the speed value is permanently frozen at its final measurement.
+- **Live Event Loops**: Uses JS `setInterval` blocks invoking isolated `/api/metrics` or `/api/crawler/status/{job_id}` endpoints for real-time dashboard updates.
+
+### Startup Lifecycle (`api/main.py` lifespan)
+
+1. **Trie Hydration**: `import_legacy_data_to_trie()` reads all `data/storage/*.data` files and reconstructs the in-memory Trie.
+2. **Orphan Cleanup**: Any jobs left in `db.data["jobs"]` from the previous session are automatically moved to `job_history` — the Active Jobs panel starts clean with no zombie entries.
+3. **Periodic Sync**: `NoSQLStore` runs a background thread flushing state to `atlas_store.json` every 5 seconds.

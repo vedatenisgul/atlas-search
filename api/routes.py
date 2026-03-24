@@ -9,6 +9,7 @@ from storage.nosql import db
 from crawler.worker import CrawlerWorker
 from search.engine import SearchEngine
 from storage.trie import trie_db
+from storage.exporter import export_all_to_legacy_format
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -52,6 +53,16 @@ async def reset_system():
     
     # Reset structural node maps in Trie memory natively
     trie_db.reset()
+    
+    import os
+    storage_dir = "data/storage"
+    if os.path.exists(storage_dir):
+        for filename in os.listdir(storage_dir):
+            if filename.endswith(".data"):
+                try:
+                    os.remove(os.path.join(storage_dir, filename))
+                except Exception:
+                    pass
     
     return {"status": "success", "message": "System wide reset executed natively."}
 
@@ -100,13 +111,25 @@ async def crawler_status(job_id: str):
     # Extract job specific queue items
     with db.lock:
         job_queue = [q for q in db.data["crawler_queue"] if q.get("origin_job_id") == job_id]
-        total_visited = len(db.data["visited_urls"])
         
     queue_size = len(job_queue)
     top_live_urls = [q["url"] for q in job_queue[:10]]
     
     w = workers.get(job_id)
     current_processing = w.current_url if w else None
+    
+    total_visited = 0
+    if w:
+        total_visited = w.total_visited
+    else:
+        with db.lock:
+            meta = db.data.get("jobs", {}).get(job_id)
+            if not meta:
+                for h in db.data.get("job_history", []):
+                    if h.get("job_id") == job_id:
+                        meta = h
+                        break
+            total_visited = meta.get("visited_count", 0) if meta else 0
     
     res = {
         "job_id": job_id,
@@ -128,6 +151,13 @@ async def crawler_status(job_id: str):
         res["queue_utilization"] = round(u, 1)
         res["backpressure_status"] = bp
         res["throttling_status"] = f"Active ({hit} req/s)"
+        res["target_hit_rate"] = hit
+        
+        created = getattr(w, "created_at", time.time())
+        end_ref = getattr(w, "ended_at", None) if not w.running else None
+        uptime = int((end_ref or time.time()) - created)
+        res["uptime_seconds"] = uptime
+        res["actual_hit_rate"] = round(w.total_visited / uptime, 2) if uptime > 0 else 0.0
     return res
 
 @router.get("/api/crawler/list")
@@ -177,10 +207,12 @@ async def global_metrics():
             cap = getattr(w, "queue_capacity", 10000)
             hit = getattr(w, "hit_rate", 2.0)
             u = (q_size / cap) * 100 if cap > 0 else 0
-            bp = "Healthy" if u < 75 else "Back-pressure Active" if u < 99 else "Critical (Queue Full)"
-            m_copy["queue_utilization"] = round(u, 1)
-            m_copy["backpressure_status"] = bp
-            m_copy["throttling_status"] = f"Active ({hit} req/s)"
+            
+            if m_copy.get("state") not in ["Completed", "Error", "Stopped"]:
+                bp = "Healthy" if u < 75 else "Back-pressure Active" if u < 99 else "Critical (Queue Full)"
+                m_copy["queue_utilization"] = round(u, 1)
+                m_copy["backpressure_status"] = bp
+                m_copy["throttling_status"] = f"Active ({hit} req/s)"
             
         jobs_list.append(m_copy)
         
@@ -219,6 +251,12 @@ async def stop_crawler(job_id: str):
         return {"status": "stopped"}
     raise HTTPException(status_code=404, detail="Job not found")
 
+@router.post("/api/crawler/export")
+async def export_crawler_data():
+    """Extracts trie_db metadata and dumps exactly to alphabetical files inside data/storage/"""
+    result = export_all_to_legacy_format()
+    return result
+
 @router.delete("/api/crawler/delete/{job_id}")
 async def delete_crawler(job_id: str):
     if job_id in workers:
@@ -243,13 +281,13 @@ async def delete_crawler(job_id: str):
             
         del workers[job_id]
         
-    with db.lock:
-        db.data["crawler_queue"] = [q for q in db.data["crawler_queue"] if q.get("origin_job_id") != job_id]
-        db.data["crawler_logs"] = [l for l in db.data["crawler_logs"] if l.get("job_id") != job_id]
-        if job_id in db.data.get("seen_urls", {}):
-            del db.data["seen_urls"][job_id]
+        with db.lock:
+            db.data["crawler_queue"] = [q for q in db.data["crawler_queue"] if q.get("origin_job_id") != job_id]
+            db.data["crawler_logs"] = [l for l in db.data["crawler_logs"] if l.get("job_id") != job_id]
+            if job_id in db.data.get("seen_urls", {}):
+                del db.data["seen_urls"][job_id]
         
-    return {"status": "deleted"}
+                return {"status": "deleted"}
 
 @router.get("/api/crawler/history")
 async def crawler_history():
@@ -308,7 +346,8 @@ async def search_query(query: str, limit: int = 10, offset: int = 0):
             "snippet": snippet,
             "origin": real_url,
             "depth": val[2],
-            "frequency": val[3]
+            "frequency": val[3],
+            "relevance_score": val[4] if len(val) > 4 else 0
         })
         
     return {

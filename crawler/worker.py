@@ -8,6 +8,7 @@ import hashlib
 from storage.nosql import db
 from core.parser import AtlasHTMLParser
 from storage.trie import trie_db
+from storage.exporter import export_all_to_legacy_format
 import string
 
 def normalize_url(url):
@@ -23,9 +24,18 @@ def normalize_url(url):
 def index_text(url, origin_url, depth, text):
     if not text:
         return
-    text = text.lower()
+    tr_map = { ord('I'): 'ı', ord('İ'): 'i', ord('Ü'): 'ü', ord('Ş'): 'ş', ord('Ö'): 'ö', ord('Ç'): 'ç', ord('Ğ'): 'ğ' }
+    text = text.translate(tr_map).lower()
     text = text.translate(str.maketrans('', '', string.punctuation))
     words = text.split()
+    if not words:
+        return
+    
+    # Skip re-indexing if this URL was already indexed (prevents frequency stacking across multiple crawl runs)
+    existing = trie_db.search(words[0], exact=True)
+    if url in existing:
+        return
+    
     for word in words:
         if word:
             trie_db.insert(word, url, origin_url, depth)
@@ -174,6 +184,18 @@ class CrawlerWorker(threading.Thread):
             self.current_url = None
             if self.job_state == "Running":
                 self.job_state = "Stopped"
+                
+            with db.lock:
+                if "jobs" in db.data and self.worker_id in db.data["jobs"]:
+                    db.data["jobs"][self.worker_id]["state"] = self.job_state
+                    db.data["jobs"][self.worker_id]["ended_at"] = self.ended_at
+            db.save()
+                
+            try:
+                export_all_to_legacy_format()
+                db.log("INFO", "Legacy ETL Exporter completed successfully writing 'a-z.data' files natively.", self.worker_id, self.worker_id)
+            except Exception as e:
+                db.log("ERROR", f"ETL Exporter failed: {e}", self.worker_id, self.worker_id)
 
     def stop(self):
         self.running = False

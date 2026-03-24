@@ -4,18 +4,30 @@
     <h1>Real-time Telemetry & Status</h1>
     <p>Observability data stream fetched periodically via JS abstraction.</p>
     
-    <div class="metrics-grid">
+    <div class="metrics-grid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
         <div class="metric-box">
-            <h3>Pending URLs (Queue)</h3>
-            <p id="metric-queue">-</p>
+            <h3>Status</h3>
+            <p id="metric-status" style="font-size:1.6rem;">-</p>
         </div>
         <div class="metric-box">
-            <h3>Registered Visited URLs</h3>
-            <p id="metric-visited">-</p>
+            <h3>Total Crawled</h3>
+            <p id="metric-visited" style="font-size:1.6rem;">-</p>
         </div>
         <div class="metric-box">
-            <h3>Active Compute Nodes</h3>
-            <p id="metric-workers">-</p>
+            <h3>Pending Queue</h3>
+            <p id="metric-queue" style="font-size:1.6rem;">-</p>
+        </div>
+        <div class="metric-box">
+            <h3>Back-pressure Load</h3>
+            <p id="metric-backpressure" style="font-size:1.6rem;">-</p>
+        </div>
+        <div class="metric-box">
+            <h3>Effective Speed</h3>
+            <p id="metric-speed" style="font-size:1.6rem;">-</p>
+        </div>
+        <div class="metric-box">
+            <h3>Active Uptime</h3>
+            <p id="metric-uptime" style="font-size:1.6rem;">-</p>
         </div>
     </div>
 
