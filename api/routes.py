@@ -183,6 +183,7 @@ async def global_metrics():
     queue_size = db.queue_size()
     total_visited = len(db.data.get("visited_urls", {}))
     logs = db.data.get("crawler_logs", [])
+    has_active = any(w.running for w in workers.values())
     
     jobs_list = []
     with db.lock:
@@ -218,7 +219,7 @@ async def global_metrics():
         
     active_workers = sum(1 for w in workers.values() if w.running and not getattr(w, "paused", False))
     return {
-        "queue_size": queue_size,
+        "queue_size": queue_size if has_active else 0,
         "total_visited": total_visited,
         "active_workers": active_workers,
         "jobs": jobs_list,
